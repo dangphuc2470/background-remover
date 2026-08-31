@@ -17,7 +17,7 @@ import {
   cloneImageDataForWorker, drawImageDataToCanvas, getCanvasImageData, cloneImageData,
   isAcceptedImage, ACCEPTED_EXTENSIONS,
   getPixelColor, canvasCoordsFromEvent, getPixelColorFromImageDataOrCanvas,
-  defaultHueRange, defaultLightnessRange,
+  defaultHueRange, defaultLightnessRange, defaultCompactHueRange,
 } from '../utils/colorUtils';
 
 const T = {
@@ -31,6 +31,7 @@ const T = {
     clickToLoad: 'Nhấn để tải ảnh',
     dropHint: 'Kéo thả, dán (Ctrl+V) hoặc chọn tệp PNG/JPG',
     startHint: '← Bắt đầu bằng cách tải ảnh vào',
+    pickColorFirst: 'Click ảnh gốc để chọn màu nền trước',
     importFile: 'Chọn tệp',
     saveAs: 'Lưu PNG',
     copyClipboard: 'Sao chép',
@@ -55,11 +56,11 @@ const T = {
     handleMove: 'Dịch cả dải (giữa)',
     deleteOuter: 'Chỉ xóa vùng ngoài',
     deleteOuterHint: 'Chỉ làm trong suốt các vùng nền chạm cạnh trên, dưới hoặc hai bên ảnh',
-    fastMode: 'Chế độ nhanh',
-    fastModeHint: 'So khớp RGB — xử lý nhanh. Tắt để lọc theo sắc/độ sáng (chính xác hơn, chậm hơn).',
-    fastTolerance: 'Độ nhạy màu (%)',
-    fastToleranceHint: 'Màu càng gần màu nền càng bị xóa — click đúng vùng nền, tránh vật thể',
-    pickBgOnly: 'Chỉ click vùng nền (cỏ/trời) — không click lên drone/vật thể',
+    additionalSettings: 'Cài đặt nâng cao',
+    additionalSettingsHint: 'Hiện dải sắc/độ sáng và làm mịn viền. Tắt = chỉ slider độ nhạy + khớp hue hẹp.',
+    basicTolerance: 'Độ nhạy màu (%)',
+    basicToleranceHint: 'Pixel phải gần màu nền bao nhiêu. Tự khớp hue trong dải hẹp.',
+    pickBgOnly: 'Chỉ click vùng nền (cỏ/trời) — không click lên vật thể',
     smoothEdge: 'Làm mịn viền',
     smoothEdgeHint: 'Làm mượt đường viền giữa đối tượng và nền trong suốt',
     smoothThickness: 'Độ dày làm mịn',
@@ -102,6 +103,7 @@ const T = {
     clickToLoad: 'Click to load an image',
     dropHint: 'Drop, paste (Ctrl+V), or select a PNG/JPG file',
     startHint: '← Start by loading an input image',
+    pickColorFirst: 'Click the input image to pick a background color first',
     importFile: 'Import file',
     saveAs: 'Save PNG',
     copyClipboard: 'Copy',
@@ -126,11 +128,11 @@ const T = {
     handleMove: 'Move whole band (center)',
     deleteOuter: 'Delete outer areas only',
     deleteOuterHint: 'Only make transparent areas touching the top, bottom, or sides',
-    fastMode: 'Fast mode',
-    fastModeHint: 'RGB matching — faster processing. Turn off for hue/lightness filtering (more accurate, slower).',
-    fastTolerance: 'Color sensitivity (%)',
-    fastToleranceHint: 'Closer colors are removed — click the background only, not the subject',
-    pickBgOnly: 'Click background only (grass/sky) — not the drone or subject',
+    additionalSettings: 'Additional settings',
+    additionalSettingsHint: 'Show hue/lightness bands and edge smoothing. Off = simple sensitivity with a narrow hue match.',
+    basicTolerance: 'Color sensitivity (%)',
+    basicToleranceHint: 'How close a pixel must be to the background color. Narrow hue band applied automatically.',
+    pickBgOnly: 'Click background only (grass/sky) — not the subject',
     smoothEdge: 'Smooth edge line',
     smoothEdgeHint: 'Smooth the boundary between subject and transparent background',
     smoothThickness: 'Smoothing thickness',
@@ -176,12 +178,13 @@ export default function BackgroundRemover({ lang }) {
   const [toast, setToast] = useState(null);
   const [error, setError] = useState(null);
 
-  const [bgColorInput, setBgColorInput] = useState('white');
+  const [bgColorInput, setBgColorInput] = useState('');
+  const [bgColorPicked, setBgColorPicked] = useState(false);
   const [hueRange, setHueRange] = useState(() => defaultHueRange(15));
   const [lightnessRange, setLightnessRange] = useState({ start: 0, end: 100 });
   const [lightnessTolerance, setLightnessTolerance] = useState(10);
   const [deleteOuterOnly, setDeleteOuterOnly] = useState(false);
-  const [fastMode, setFastMode] = useState(true);
+  const [additionalSettings, setAdditionalSettings] = useState(false);
   const [smoothEdge, setSmoothEdge] = useState(false);
   const [smoothThickness, setSmoothThickness] = useState(1);
   const [previewMask, setPreviewMask] = useState(false);
@@ -220,14 +223,18 @@ export default function BackgroundRemover({ lang }) {
     });
   }, [setCallbacks]);
 
-  const parsedColor = useMemo(() => parseColor(bgColorInput), [bgColorInput]);
-  const colorHex = rgbToHex(parsedColor);
+  const parsedColor = useMemo(
+    () => (bgColorPicked ? parseColor(bgColorInput) : null),
+    [bgColorInput, bgColorPicked]
+  );
+  const colorHex = parsedColor ? rgbToHex(parsedColor) : '#808080';
 
   useEffect(() => {
-    setHueRange(defaultHueRange(15));
-    setLightnessRange(defaultLightnessRange(parsedColor, fastMode ? 10 : 20));
-    if (!fastMode) setLightnessTolerance(20);
-  }, [parsedColor, fastMode]);
+    if (!parsedColor) return;
+    setHueRange(additionalSettings ? defaultHueRange(15) : defaultCompactHueRange(5));
+    setLightnessRange(defaultLightnessRange(parsedColor, additionalSettings ? 20 : 10));
+    if (additionalSettings) setLightnessTolerance(20);
+  }, [parsedColor, additionalSettings]);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -247,19 +254,19 @@ export default function BackgroundRemover({ lang }) {
   }, [outputData, drawToCanvas]);
 
   processOptionsRef.current = {
-    bgColor: parsedColor,
+    bgColor: parsedColor ?? [255, 255, 255],
     hueRange,
     lightnessRange,
     deleteOuterOnly,
     smoothEdge,
     smoothThickness,
     previewMask,
-    fastMode,
+    additionalSettings,
     rgbTolerance: lightnessTolerance,
   };
 
   const processImage = useCallback((data) => {
-    if (!data) return;
+    if (!data || !bgColorPicked || !parsedColor) return;
     outputDisplaySizeRef.current = { width: data.width, height: data.height };
 
     requestAnimationFrame(() => {
@@ -276,15 +283,16 @@ export default function BackgroundRemover({ lang }) {
         setError(err?.message || t.errorWorker);
       }
     });
-  }, [postJob, t.errorWorker]);
+  }, [postJob, t.errorWorker, bgColorPicked, parsedColor]);
 
   const runProcess = useCallback(() => {
     const source = processSourceRef.current;
-    if (source) processImage(source);
-  }, [processImage]);
+    if (source && bgColorPicked) processImage(source);
+  }, [processImage, bgColorPicked]);
 
   useDebouncedEffect(runProcess, [
     inputData,
+    bgColorPicked,
     bgColorInput,
     hueRange.start,
     hueRange.end,
@@ -295,7 +303,7 @@ export default function BackgroundRemover({ lang }) {
     smoothEdge,
     smoothThickness,
     previewMask,
-    fastMode,
+    additionalSettings,
   ], 300);
 
   const handleFile = useCallback(async (file) => {
@@ -310,6 +318,8 @@ export default function BackgroundRemover({ lang }) {
       processSourceRef.current = cloneImageData(data);
       setInputData(data);
       setOutputData(null);
+      setBgColorPicked(false);
+      setBgColorInput('');
       setFileName(file.name.replace(/\.(jpe?g|png)$/i, ''));
     } catch {
       setError(t.errorLoad);
@@ -389,6 +399,8 @@ export default function BackgroundRemover({ lang }) {
     setFileName('');
     setError(null);
     setHoverPreview(null);
+    setBgColorPicked(false);
+    setBgColorInput('');
   };
 
   const handleInputCanvasClick = useCallback((e) => {
@@ -398,9 +410,10 @@ export default function BackgroundRemover({ lang }) {
     if (!rgb) return;
     const hex = rgbToHex(rgb);
     setBgColorInput(hex);
+    setBgColorPicked(true);
     setOutputData(null);
-    showToast(fastMode ? `${t.colorPicked(hex)} — ${t.pickBgOnly}` : t.colorPicked(hex));
-  }, [inputData, showToast, t, fastMode]);
+    showToast(!additionalSettings ? `${t.colorPicked(hex)} — ${t.pickBgOnly}` : t.colorPicked(hex));
+  }, [inputData, showToast, t, additionalSettings]);
 
   const handleInputCanvasMove = useCallback((e) => {
     if (!inputData || !inputCanvasRef.current) {
@@ -548,8 +561,10 @@ export default function BackgroundRemover({ lang }) {
           }
         >
           {!outputData && !isProcessing ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-sm text-[#49454F] font-medium">{t.startHint}</p>
+            <div className="absolute inset-0 flex items-center justify-center px-4">
+              <p className="text-sm text-[#49454F] font-medium text-center">
+                {inputData && !bgColorPicked ? t.pickColorFirst : t.startHint}
+              </p>
             </div>
           ) : (
             <div className="absolute inset-0 flex items-center justify-center p-4 overflow-auto">
@@ -580,23 +595,23 @@ export default function BackgroundRemover({ lang }) {
             <h3 className="text-sm font-bold text-[#0B57D0] uppercase tracking-wide">{lang === 'vi' ? 'Màu nền & vùng' : 'Color & Area'}</h3>
             <div>
               <div className="flex gap-2 items-center">
-                <input type="color" value={colorHex} onChange={(e) => setBgColorInput(e.target.value)} className="w-10 h-10 rounded-lg shrink-0" disabled={!inputData} />
-                <input type="text" className="m3-input flex-1" value={bgColorInput} onChange={(e) => setBgColorInput(e.target.value)} placeholder="white, #FFFFFF..." disabled={!inputData} />
+                <input type="color" value={colorHex} onChange={(e) => { setBgColorInput(e.target.value); setBgColorPicked(true); }} className="w-10 h-10 rounded-lg shrink-0" disabled={!inputData} />
+                <input type="text" className="m3-input flex-1" value={bgColorInput} onChange={(e) => { setBgColorInput(e.target.value); setBgColorPicked(true); }} placeholder="white, #FFFFFF..." disabled={!inputData} />
               </div>
               <p className="m3-input-label">{t.bgColorHint}</p>
               <p className="m3-input-label">{t.pickFromImageHint}</p>
             </div>
             <div>
               <div className="flex items-start gap-3 pb-3">
-                <Toggle active={fastMode} onChange={setFastMode} disabled={!inputData} />
+                <Toggle active={additionalSettings} onChange={setAdditionalSettings} disabled={!inputData} />
                 <div>
-                  <p className="text-sm font-semibold">{t.fastMode}</p>
-                  <p className="text-xs text-[#49454F] mt-0.5">{t.fastModeHint}</p>
+                  <p className="text-sm font-semibold">{t.additionalSettings}</p>
+                  <p className="text-xs text-[#49454F] mt-0.5">{t.additionalSettingsHint}</p>
                 </div>
               </div>
-              {fastMode ? (
+              {!additionalSettings ? (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-[#49454F]">{t.fastTolerance}</p>
+                  <p className="text-xs font-semibold text-[#49454F]">{t.basicTolerance}</p>
                   <div className="flex items-center gap-3">
                     <span
                       className="w-4 h-4 rounded border border-[#CAC4D0] shrink-0"
@@ -613,11 +628,11 @@ export default function BackgroundRemover({ lang }) {
                     />
                     <span className="text-sm font-bold w-12 text-right shrink-0">{lightnessTolerance}%</span>
                   </div>
-                  <p className="text-xs text-[#49454F]">{t.fastToleranceHint}</p>
+                  <p className="text-xs text-[#49454F]">{t.basicToleranceHint}</p>
                 </div>
               ) : (
                 <SimilarityPreviewSlider
-                  sourceColor={parsedColor}
+                  sourceColor={parsedColor ?? [128, 128, 128]}
                   hueRange={hueRange}
                   lightnessRange={lightnessRange}
                   onHueRangeChange={setHueRange}
@@ -651,18 +666,18 @@ export default function BackgroundRemover({ lang }) {
           <div className="space-y-4">
             <h3 className="text-sm font-bold text-[#0B57D0] uppercase tracking-wide">{lang === 'vi' ? 'Làm mịn viền' : 'Edge Removal'}</h3>
             <div className="flex items-start gap-3">
-              <Toggle active={smoothEdge} onChange={setSmoothEdge} disabled={!inputData || fastMode} />
+              <Toggle active={smoothEdge} onChange={setSmoothEdge} disabled={!inputData || !additionalSettings} />
               <div>
                 <p className="text-sm font-semibold">{t.smoothEdge}</p>
                 <p className="text-xs text-[#49454F] mt-0.5">
-                  {fastMode
-                    ? (lang === 'vi' ? 'Chỉ dùng khi tắt chế độ nhanh.' : 'Only available when fast mode is off.')
+                  {!additionalSettings
+                    ? (lang === 'vi' ? 'Bật Cài đặt nâng cao để dùng.' : 'Enable Additional settings to use.')
                     : t.smoothEdgeHint}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <input type="number" min="1" max="10" value={smoothThickness} onChange={(e) => setSmoothThickness(Math.max(1, Math.min(10, Number(e.target.value))))} className="m3-input w-20 text-center" disabled={!inputData || !smoothEdge || fastMode} />
+              <input type="number" min="1" max="10" value={smoothThickness} onChange={(e) => setSmoothThickness(Math.max(1, Math.min(10, Number(e.target.value))))} className="m3-input w-20 text-center" disabled={!inputData || !smoothEdge || !additionalSettings} />
               <span className="text-sm text-[#49454F]">{t.smoothThickness}</span>
             </div>
           </div>

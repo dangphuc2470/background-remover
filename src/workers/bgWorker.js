@@ -1,10 +1,10 @@
-import { pixelMatchFactor, rgbMatchFactor, toleranceToMaxDistance } from '../utils/perceptualMatch.js';
+import { pixelMatchFactor, compactMatchFactor, toleranceToMaxDistance } from '../utils/perceptualMatch.js';
 
 function matchFactor(r, g, b, bgR, bgG, bgB, options) {
-  if (options.fastMode) {
-    return rgbMatchFactor(r, g, b, bgR, bgG, bgB, options.maxDist);
+  if (options.additionalSettings) {
+    return pixelMatchFactor(r, g, b, bgR, bgG, bgB, options.hueRange, options.lightnessRange);
   }
-  return pixelMatchFactor(r, g, b, bgR, bgG, bgB, options.hueRange, options.lightnessRange);
+  return compactMatchFactor(r, g, b, bgR, bgG, bgB, options.maxDist, options.hueRange);
 }
 
 function isBackgroundPixel(r, g, b, bgR, bgG, bgB, options) {
@@ -107,17 +107,21 @@ function processImage(imageData, options) {
     smoothEdge,
     smoothThickness,
     previewMask,
-    fastMode,
+    additionalSettings,
     rgbTolerance,
   } = options;
   const [bgR, bgG, bgB] = bgColor;
 
-  const matchOptions = fastMode
-    ? { fastMode: true, maxDist: toleranceToMaxDistance(rgbTolerance ?? 10) }
-    : {
-      fastMode: false,
+  const matchOptions = additionalSettings
+    ? {
+      additionalSettings: true,
       hueRange: options.hueRange,
       lightnessRange: options.lightnessRange,
+    }
+    : {
+      additionalSettings: false,
+      maxDist: toleranceToMaxDistance(rgbTolerance ?? 10),
+      hueRange: options.hueRange,
     };
 
   const result = new ImageData(
@@ -159,7 +163,7 @@ function processImage(imageData, options) {
     }
   }
 
-  if (smoothEdge && !previewMask && !fastMode) {
+  if (smoothEdge && !previewMask && additionalSettings) {
     smoothAlphaChannel(data, width, height, smoothThickness);
   }
 

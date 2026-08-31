@@ -160,6 +160,23 @@ export function rgbMatchFactor(r, g, b, bgR, bgG, bgB, maxDist) {
   return (maxDist - dist) / feather;
 }
 
+export function compactMatchFactor(r, g, b, bgR, bgG, bgB, maxDist, hueRange) {
+  const rgbFactor = rgbMatchFactor(r, g, b, bgR, bgG, bgB, maxDist);
+  if (rgbFactor <= 0) return 0;
+
+  const [, s2] = rgbToHsl(bgR, bgG, bgB);
+  if (s2 < CHROMATIC_THRESHOLD) return rgbFactor;
+
+  const hueFactor = pixelMatchFactor(r, g, b, bgR, bgG, bgB, hueRange, { start: 0, end: 100 });
+  if (hueFactor <= 0) return 0;
+  return Math.min(rgbFactor, hueFactor);
+}
+
+/** Narrow hue band for default (non-advanced) mode. */
+export function defaultCompactHueRange(hueTolerance = 5) {
+  return defaultHueRange(hueTolerance);
+}
+
 export function toleranceToMaxDistance(percent) {
   const t = Math.max(0, Math.min(100, percent));
   return (t / 100) * 380 + 8;

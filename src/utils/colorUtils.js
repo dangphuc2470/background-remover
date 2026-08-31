@@ -2,6 +2,7 @@ export {
   isChromaticSource,
   defaultHueRange,
   defaultLightnessRange,
+  defaultCompactHueRange,
   symmetricLightnessRange,
   lightnessToleranceToDelta,
   sourceLightnessCenter,

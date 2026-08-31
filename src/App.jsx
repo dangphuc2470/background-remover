@@ -11,7 +11,7 @@ const TOOL_COMPONENTS = {
 };
 
 export default function App() {
-  const [lang, setLang] = useState('vi');
+  const [lang, setLang] = useState('en');
   const [activeTool, setActiveTool] = useState('bg-remover');
 
   const ToolComponent = TOOL_COMPONENTS[activeTool];
