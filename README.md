@@ -6,7 +6,7 @@ A privacy-first, browser-based image toolkit for removing backgrounds and replac
 
 ## Live demo
 
-Deploy your own copy with Vercel, or run locally (see below).
+**https://background-remover-delta-six.vercel.app**
 
 ## Tools
 
