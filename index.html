@@ -2,12 +2,73 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Background Remover — Remove PNG/JPG backgrounds 100% in your browser." />
-    <title>Background Remover — Online transparent PNG export</title>
+
+    <title>Background Remover — Free Online PNG/JPG Background Removal</title>
+    <meta name="description" content="Free online background remover for PNG and JPG. Pick a color, remove the background, and export transparent PNG — 100% private, runs in your browser." />
+    <meta name="keywords" content="background remover, remove background, transparent PNG, online photo editor, color replacer, free background removal, browser photo tool" />
+    <meta name="author" content="dangphuc2470" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0B57D0" />
+    <link rel="canonical" href="https://background-remover-delta-six.vercel.app/" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Background Remover" />
+    <meta property="og:title" content="Background Remover — Free Online PNG/JPG Background Removal" />
+    <meta property="og:description" content="Remove image backgrounds and replace colors in your browser. No upload, no account — export transparent PNG instantly." />
+    <meta property="og:url" content="https://background-remover-delta-six.vercel.app/" />
+    <meta property="og:image" content="https://background-remover-delta-six.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Background Remover — Free Online PNG/JPG Background Removal" />
+    <meta name="twitter:description" content="Remove image backgrounds in your browser. Private, fast, free — export transparent PNG." />
+    <meta name="twitter:image" content="https://background-remover-delta-six.vercel.app/og-image.png" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Background Remover",
+      "url": "https://background-remover-delta-six.vercel.app/",
+      "description": "Free online tool to remove PNG/JPG backgrounds and replace colors. Runs entirely in the browser via Web Workers.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript. Modern browser with Web Worker support.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Background removal by color",
+        "Color replacer",
+        "Transparent PNG export",
+        "Clipboard copy",
+        "100% client-side processing"
+      ],
+      "screenshot": "https://background-remover-delta-six.vercel.app/og-image.png",
+      "author": {
+        "@type": "Person",
+        "name": "dangphuc2470",
+        "url": "https://github.com/dangphuc2470"
+      }
+    }
+    </script>
   </head>
   <body>
+    <noscript>
+      <h1>Background Remover</h1>
+      <p>Free online background remover for PNG and JPG. JavaScript is required to run this app.</p>
+      <p><a href="https://github.com/dangphuc2470/background-remover">View source on GitHub</a></p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

@@ -1,0 +1,17 @@
+{
+  "name": "Background Remover",
+  "short_name": "BG Remover",
+  "description": "Remove image backgrounds and replace colors — 100% in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0B57D0",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

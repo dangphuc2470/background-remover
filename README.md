@@ -92,6 +92,17 @@ src/
   hooks/           # Worker lifecycle, debounced processing
 ```
 
+## SEO & discoverability
+
+The live app includes:
+
+- Meta description, keywords, canonical URL, and `robots` directives
+- Open Graph + Twitter Card tags (share preview image at `/og-image.png`)
+- [JSON-LD](https://schema.org/WebApplication) structured data
+- `robots.txt`, `sitemap.xml`, and web app manifest
+
+**GitHub repo tips:** add topics such as `background-remover`, `react`, `vite`, `web-worker`, `image-processing`, `vercel` in repository settings for better discovery.
+
 ## License
 
 Private project — all rights reserved.

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://background-remover-delta-six.vercel.app/sitemap.xml
