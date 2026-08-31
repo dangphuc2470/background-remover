@@ -9,6 +9,7 @@ import HoverColorPreview from '../components/HoverColorPreview';
 import ImageZoomPreview from '../components/ImageZoomPreview';
 import { useDebouncedEffect } from '../hooks/useDebouncedProcess';
 import { useImageWorker } from '../hooks/useImageWorker';
+import BgWorkerOld from '../workers/bgWorkerOld.js?worker';
 import {
   parseColor, rgbToHex, loadImageFromFile, imageToImageData,
   imageDataToBlob, copyImageToClipboard, downloadBlob,
@@ -147,11 +148,7 @@ export default function BackgroundRemoverOld({ lang }) {
   const processOptionsRef = useRef({});
   const workerHandlersRef = useRef({});
 
-  const workerUrl = useMemo(
-    () => new URL('../workers/bgWorkerOld.js', import.meta.url),
-    []
-  );
-  const { postJob, setCallbacks } = useImageWorker(workerUrl);
+  const { postJob, setCallbacks } = useImageWorker(BgWorkerOld);
 
   workerHandlersRef.current = {
     onSuccess: (result) => {

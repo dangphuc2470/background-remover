@@ -10,6 +10,7 @@ import ImageZoomPreview from '../components/ImageZoomPreview';
 import SimilarityPreviewSlider from '../components/SimilarityPreviewSlider';
 import { useDebouncedEffect } from '../hooks/useDebouncedProcess';
 import { useImageWorker } from '../hooks/useImageWorker';
+import ColorReplaceWorker from '../workers/colorReplaceWorker.js?worker';
 import {
   parseColor, rgbToHex, loadImageFromFile, imageToImageData,
   imageDataToBlob, copyImageToClipboard, downloadBlob,
@@ -179,11 +180,7 @@ export default function ColorReplacer({ lang }) {
   const processOptionsRef = useRef({});
   const workerHandlersRef = useRef({});
 
-  const workerUrl = useMemo(
-    () => new URL('../workers/colorReplaceWorker.js', import.meta.url),
-    []
-  );
-  const { postJob, setCallbacks } = useImageWorker(workerUrl);
+  const { postJob, setCallbacks } = useImageWorker(ColorReplaceWorker);
 
   workerHandlersRef.current = {
     onSuccess: (result) => {

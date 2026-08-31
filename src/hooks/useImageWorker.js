@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 
 const DEFAULT_TIMEOUT_MS = 45000;
 
-export function useImageWorker(workerModuleUrl, timeoutMs = DEFAULT_TIMEOUT_MS) {
+export function useImageWorker(WorkerConstructor, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const workerRef = useRef(null);
   const processIdRef = useRef(0);
   const timeoutRef = useRef(null);
@@ -17,7 +17,7 @@ export function useImageWorker(workerModuleUrl, timeoutMs = DEFAULT_TIMEOUT_MS) 
   const sendNextRef = useRef(() => {});
 
   useEffect(() => {
-    const worker = new Worker(workerModuleUrl, { type: 'module' });
+    const worker = new WorkerConstructor();
     let active = true;
 
     const sendNext = () => {
@@ -76,11 +76,11 @@ export function useImageWorker(workerModuleUrl, timeoutMs = DEFAULT_TIMEOUT_MS) 
       sendNext();
     };
 
-    worker.onerror = () => {
+    worker.onerror = (event) => {
       if (!active) return;
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
-      callbacksRef.current.onError('Worker processing failed');
+      callbacksRef.current.onError(event.message || 'Worker processing failed');
       sendNext();
     };
 
@@ -98,7 +98,7 @@ export function useImageWorker(workerModuleUrl, timeoutMs = DEFAULT_TIMEOUT_MS) 
       sendNextRef.current = () => {};
       callbacksRef.current.onEnd();
     };
-  }, [workerModuleUrl, timeoutMs]);
+  }, [WorkerConstructor, timeoutMs]);
 
   const setCallbacks = useCallback((callbacks) => {
     callbacksRef.current = { ...callbacksRef.current, ...callbacks };

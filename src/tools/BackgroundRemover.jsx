@@ -10,6 +10,7 @@ import ImageZoomPreview from '../components/ImageZoomPreview';
 import SimilarityPreviewSlider from '../components/SimilarityPreviewSlider';
 import { useDebouncedEffect } from '../hooks/useDebouncedProcess';
 import { useImageWorker } from '../hooks/useImageWorker';
+import BgWorker from '../workers/bgWorker.js?worker';
 import {
   parseColor, rgbToHex, loadImageFromFile, imageToImageData,
   imageDataToBlob, copyImageToClipboard, downloadBlob,
@@ -195,11 +196,7 @@ export default function BackgroundRemover({ lang }) {
   const processOptionsRef = useRef({});
   const workerHandlersRef = useRef({});
 
-  const workerUrl = useMemo(
-    () => new URL('../workers/bgWorker.js', import.meta.url),
-    []
-  );
-  const { postJob, setCallbacks } = useImageWorker(workerUrl);
+  const { postJob, setCallbacks } = useImageWorker(BgWorker);
 
   workerHandlersRef.current = {
     onSuccess: (result) => {
